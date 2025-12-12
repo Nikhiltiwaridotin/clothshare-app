@@ -3,13 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { authAPI, getBackendInfo } from '../api';
+import { isSupabaseConfigured } from '../lib/supabase';
 import './Auth.css';
 
 export default function Login() {
     const navigate = useNavigate();
     const { login } = useApp();
 
-    const [loginMethod, setLoginMethod] = useState('magic'); // 'magic' or 'password'
+    // Check if Supabase is configured - if not, disable magic link option
+    const supabaseAvailable = isSupabaseConfigured();
+
+    // Default to password if Supabase is not configured
+    const [loginMethod, setLoginMethod] = useState(supabaseAvailable ? 'magic' : 'password');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -92,25 +97,27 @@ export default function Login() {
                         <p className="auth-subtitle">Log in to continue renting</p>
                     </div>
 
-                    {/* Login Method Toggle */}
-                    <div className="login-method-toggle">
-                        <button
-                            type="button"
-                            className={`method-btn ${loginMethod === 'magic' ? 'active' : ''}`}
-                            onClick={() => setLoginMethod('magic')}
-                        >
-                            <Sparkles size={16} />
-                            Magic Link
-                        </button>
-                        <button
-                            type="button"
-                            className={`method-btn ${loginMethod === 'password' ? 'active' : ''}`}
-                            onClick={() => setLoginMethod('password')}
-                        >
-                            <Lock size={16} />
-                            Password
-                        </button>
-                    </div>
+                    {/* Login Method Toggle - Only show if Supabase is configured */}
+                    {supabaseAvailable && (
+                        <div className="login-method-toggle">
+                            <button
+                                type="button"
+                                className={`method-btn ${loginMethod === 'magic' ? 'active' : ''}`}
+                                onClick={() => setLoginMethod('magic')}
+                            >
+                                <Sparkles size={16} />
+                                Magic Link
+                            </button>
+                            <button
+                                type="button"
+                                className={`method-btn ${loginMethod === 'password' ? 'active' : ''}`}
+                                onClick={() => setLoginMethod('password')}
+                            >
+                                <Lock size={16} />
+                                Password
+                            </button>
+                        </div>
+                    )}
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="auth-form">
@@ -220,18 +227,6 @@ export default function Login() {
                     {/* Footer */}
                     <p className="auth-footer">
                         Don't have an account? <Link to="/signup">Sign up</Link>
-                    </p>
-                </div>
-
-                {/* Backend Status */}
-                <div className="demo-hint">
-                    <p>
-                        <strong>Backend:</strong> {backendInfo.configured}
-                        {!backendInfo.isSupabase && (
-                            <span style={{ color: 'var(--warning)', marginLeft: '8px' }}>
-                                (Local server - won't work for other users)
-                            </span>
-                        )}
                     </p>
                 </div>
             </div>

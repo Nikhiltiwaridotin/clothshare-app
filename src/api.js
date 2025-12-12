@@ -1,13 +1,27 @@
-// API Configuration
+// API Configuration - Uses Supabase for production, local server for development
+import { isSupabaseConfigured } from './lib/supabase';
+import * as supabaseAPI from './supabaseApi';
+
+// Check if we should use Supabase (production) or local server (development)
+const useSupabase = isSupabaseConfigured();
+
+// If Supabase is configured, use it; otherwise fall back to local server
+if (useSupabase) {
+    console.log('🚀 Using Supabase backend');
+} else {
+    console.log('⚠️ Supabase not configured, using local server on port 5000');
+}
+
+// Local server configuration (for development)
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Helper to get auth header
+// Helper to get auth header for local server
 const getAuthHeader = () => {
     const token = localStorage.getItem('clothshare_token');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
-// Generic fetch wrapper with improved error handling
+// Generic fetch wrapper for local server
 async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
 
@@ -24,7 +38,6 @@ async function apiCall(endpoint, options = {}) {
         console.log(`API Request: ${config.method || 'GET'} ${url}`);
         const response = await fetch(url, config);
 
-        // Try to parse JSON response
         let data;
         try {
             data = await response.json();
@@ -41,7 +54,6 @@ async function apiCall(endpoint, options = {}) {
         console.log(`API Success: ${endpoint}`, data);
         return data;
     } catch (error) {
-        // Check if it's a network error (server not reachable)
         if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
             console.error('Network Error: Server not reachable at', url);
             throw new Error('Cannot connect to server. Please make sure the backend is running on port 5000.');
@@ -51,8 +63,18 @@ async function apiCall(endpoint, options = {}) {
     }
 }
 
-// Auth API
-export const authAPI = {
+// ============================================
+// AUTH API - Hybrid (Supabase + Local)
+// ============================================
+export const authAPI = useSupabase ? {
+    // Use Supabase API
+    ...supabaseAPI.authAPI,
+
+    // Send OTP (Magic Link) - NEW!
+    sendOTP: supabaseAPI.authAPI.sendOTP,
+    verifyOTP: supabaseAPI.authAPI.verifyOTP,
+} : {
+    // Local server fallback
     register: async (userData) => {
         const data = await apiCall('/auth/register', {
             method: 'POST',
@@ -108,11 +130,21 @@ export const authAPI = {
 
     isAuthenticated: () => {
         return !!localStorage.getItem('clothshare_token');
+    },
+
+    // Stub for OTP (not available on local server)
+    sendOTP: async () => {
+        throw new Error('OTP login requires Supabase configuration');
+    },
+    verifyOTP: async () => {
+        throw new Error('OTP login requires Supabase configuration');
     }
 };
 
-// Items API
-export const itemsAPI = {
+// ============================================
+// ITEMS API
+// ============================================
+export const itemsAPI = useSupabase ? supabaseAPI.itemsAPI : {
     getAll: async (filters = {}) => {
         const params = new URLSearchParams();
         Object.entries(filters).forEach(([key, value]) => {
@@ -151,8 +183,10 @@ export const itemsAPI = {
     }
 };
 
-// Rentals API
-export const rentalsAPI = {
+// ============================================
+// RENTALS API
+// ============================================
+export const rentalsAPI = useSupabase ? supabaseAPI.rentalsAPI : {
     create: async (rentalData) => {
         return apiCall('/rentals', {
             method: 'POST',
@@ -187,8 +221,14 @@ export const rentalsAPI = {
     }
 };
 
-// Health check
+// ============================================
+// HEALTH CHECK
+// ============================================
 export const checkServerHealth = async () => {
+    if (useSupabase) {
+        return supabaseAPI.checkServerHealth();
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/health`);
         return response.ok;
@@ -196,3 +236,9 @@ export const checkServerHealth = async () => {
         return false;
     }
 };
+
+// Export info about which backend is being used
+export const getBackendInfo = () => ({
+    isSupabase: useSupabase,
+    configured: useSupabase ? 'Supabase Cloud' : 'Local Server (port 5000)'
+});

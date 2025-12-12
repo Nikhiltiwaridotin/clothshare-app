@@ -1,20 +1,25 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { authAPI, getBackendInfo } from '../api';
 import './Auth.css';
 
 export default function Login() {
     const navigate = useNavigate();
     const { login } = useApp();
 
+    const [loginMethod, setLoginMethod] = useState('magic'); // 'magic' or 'password'
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const backendInfo = getBackendInfo();
 
     const handleChange = (e) => {
         setFormData(prev => ({
@@ -22,9 +27,34 @@ export default function Login() {
             [e.target.name]: e.target.value
         }));
         setError('');
+        setSuccess('');
     };
 
-    const handleSubmit = async (e) => {
+    // Handle Magic Link (OTP) login
+    const handleMagicLink = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        if (!formData.email) {
+            setError('Please enter your email');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            await authAPI.sendOTP(formData.email);
+            setSuccess('✨ Magic link sent! Check your email inbox and click the link to login.');
+        } catch (err) {
+            setError(err.message || 'Failed to send magic link. Please try again.');
+        }
+
+        setLoading(false);
+    };
+
+    // Handle Password login
+    const handlePasswordLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
@@ -46,6 +76,8 @@ export default function Login() {
         setLoading(false);
     };
 
+    const handleSubmit = loginMethod === 'magic' ? handleMagicLink : handlePasswordLogin;
+
     return (
         <div className="auth-page">
             <div className="auth-container">
@@ -60,12 +92,39 @@ export default function Login() {
                         <p className="auth-subtitle">Log in to continue renting</p>
                     </div>
 
+                    {/* Login Method Toggle */}
+                    <div className="login-method-toggle">
+                        <button
+                            type="button"
+                            className={`method-btn ${loginMethod === 'magic' ? 'active' : ''}`}
+                            onClick={() => setLoginMethod('magic')}
+                        >
+                            <Sparkles size={16} />
+                            Magic Link
+                        </button>
+                        <button
+                            type="button"
+                            className={`method-btn ${loginMethod === 'password' ? 'active' : ''}`}
+                            onClick={() => setLoginMethod('password')}
+                        >
+                            <Lock size={16} />
+                            Password
+                        </button>
+                    </div>
+
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="auth-form">
                         {error && (
                             <div className="auth-error">
                                 <AlertCircle size={16} />
                                 {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="auth-success">
+                                <CheckCircle size={16} />
+                                {success}
                             </div>
                         )}
 
@@ -84,41 +143,52 @@ export default function Login() {
                                     required
                                 />
                             </div>
+                            {loginMethod === 'magic' && (
+                                <p className="form-hint">
+                                    We'll send you a magic link to sign in instantly - no password needed!
+                                </p>
+                            )}
                         </div>
 
-                        <div className="form-group">
-                            <div className="form-label-row">
-                                <label className="form-label" htmlFor="password">Password</label>
-                                <Link to="/forgot-password" className="form-link">Forgot password?</Link>
+                        {loginMethod === 'password' && (
+                            <div className="form-group">
+                                <div className="form-label-row">
+                                    <label className="form-label" htmlFor="password">Password</label>
+                                    <Link to="/forgot-password" className="form-link">Forgot password?</Link>
+                                </div>
+                                <div className="input-wrapper">
+                                    <Lock className="input-icon" size={18} />
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        id="password"
+                                        name="password"
+                                        className="form-input"
+                                        placeholder="Enter your password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="input-toggle"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
-                            <div className="input-wrapper">
-                                <Lock className="input-icon" size={18} />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    id="password"
-                                    name="password"
-                                    className="form-input"
-                                    placeholder="Enter your password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    className="input-toggle"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
-                            </div>
-                        </div>
+                        )}
 
                         <button
                             type="submit"
                             className={`btn btn-primary btn-lg w-full ${loading ? 'loading' : ''}`}
                             disabled={loading}
                         >
-                            {loading ? 'Logging in...' : 'Log in'}
+                            {loading ? (
+                                loginMethod === 'magic' ? 'Sending link...' : 'Logging in...'
+                            ) : (
+                                loginMethod === 'magic' ? 'Send Magic Link' : 'Log in'
+                            )}
                             {!loading && <ArrowRight size={18} />}
                         </button>
                     </form>
@@ -153,11 +223,75 @@ export default function Login() {
                     </p>
                 </div>
 
-                {/* Server Status Hint */}
+                {/* Backend Status */}
                 <div className="demo-hint">
-                    <p><strong>Note:</strong> Make sure the backend server is running on port 5000</p>
+                    <p>
+                        <strong>Backend:</strong> {backendInfo.configured}
+                        {!backendInfo.isSupabase && (
+                            <span style={{ color: 'var(--warning)', marginLeft: '8px' }}>
+                                (Local server - won't work for other users)
+                            </span>
+                        )}
+                    </p>
                 </div>
             </div>
+
+            <style>{`
+                .login-method-toggle {
+                    display: flex;
+                    gap: 0.5rem;
+                    padding: 0.25rem;
+                    background: var(--bg-secondary);
+                    border-radius: 12px;
+                    margin-bottom: 1.5rem;
+                }
+
+                .method-btn {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    padding: 0.75rem 1rem;
+                    border: none;
+                    background: transparent;
+                    color: var(--text-secondary);
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .method-btn:hover {
+                    color: var(--text-primary);
+                }
+
+                .method-btn.active {
+                    background: var(--bg-primary);
+                    color: var(--primary);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .auth-success {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 0.5rem;
+                    padding: 1rem;
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                    border-radius: 12px;
+                    color: var(--success);
+                    font-size: 0.875rem;
+                    line-height: 1.5;
+                    margin-bottom: 1rem;
+                }
+
+                .auth-success svg {
+                    flex-shrink: 0;
+                    margin-top: 2px;
+                }
+            `}</style>
         </div>
     );
 }

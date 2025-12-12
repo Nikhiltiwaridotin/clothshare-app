@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, MapPin, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, MapPin, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { authAPI, getBackendInfo } from '../api';
 import './Auth.css';
 
 export default function Signup() {
@@ -9,6 +10,7 @@ export default function Signup() {
     const { signup, campuses } = useApp();
 
     const [step, setStep] = useState(1);
+    const [signupMethod, setSignupMethod] = useState('magic'); // 'magic' or 'password'
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -19,7 +21,10 @@ export default function Signup() {
     });
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const backendInfo = getBackendInfo();
 
     const handleChange = (e) => {
         setFormData(prev => ({
@@ -27,6 +32,7 @@ export default function Signup() {
             [e.target.name]: e.target.value
         }));
         setError('');
+        setSuccess('');
     };
 
     const validateStep1 = () => {
@@ -38,7 +44,7 @@ export default function Signup() {
             setError('Please enter a valid email');
             return false;
         }
-        if (formData.password.length < 6) {
+        if (signupMethod === 'password' && formData.password.length < 6) {
             setError('Password must be at least 6 characters');
             return false;
         }
@@ -51,9 +57,41 @@ export default function Signup() {
         }
     };
 
-    const handleSubmit = async (e) => {
+    // Handle Magic Link signup
+    const handleMagicSignup = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError('');
+        setSuccess('');
 
+        if (!formData.email || !formData.name) {
+            setError('Please enter your name and email');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            // First, send the magic link
+            await authAPI.sendOTP(formData.email);
+            setSuccess('✨ Check your email! Click the magic link to complete signup. Your profile info will be saved when you log in.');
+
+            // Store profile data temporarily for when they click the link
+            localStorage.setItem('clothshare_pending_profile', JSON.stringify({
+                name: formData.name,
+                phone: formData.phone,
+                campus: formData.campus,
+                building: formData.building
+            }));
+        } catch (err) {
+            setError(err.message || 'Failed to send magic link. Please try again.');
+        }
+
+        setLoading(false);
+    };
+
+    // Handle Password signup
+    const handlePasswordSignup = async (e) => {
+        e.preventDefault();
         setLoading(true);
         setError('');
 
@@ -67,13 +105,19 @@ export default function Signup() {
         });
 
         if (result.success) {
-            navigate('/dashboard');
+            if (result.needsConfirmation) {
+                setSuccess('✅ Account created! Please check your email to confirm your account.');
+            } else {
+                navigate('/dashboard');
+            }
         } else {
             setError(result.error || 'Registration failed. Please try again.');
         }
 
         setLoading(false);
     };
+
+    const handleSubmit = signupMethod === 'magic' ? handleMagicSignup : handlePasswordSignup;
 
     return (
         <div className="auth-page">
@@ -91,18 +135,42 @@ export default function Signup() {
                         </p>
                     </div>
 
-                    {/* Progress */}
-                    <div className="signup-progress">
-                        <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>
-                            <span className="progress-number">1</span>
-                            <span className="progress-label">Account</span>
+                    {/* Progress - only show for password signup */}
+                    {signupMethod === 'password' && (
+                        <div className="signup-progress">
+                            <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>
+                                <span className="progress-number">1</span>
+                                <span className="progress-label">Account</span>
+                            </div>
+                            <div className="progress-line"></div>
+                            <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>
+                                <span className="progress-number">2</span>
+                                <span className="progress-label">Location</span>
+                            </div>
                         </div>
-                        <div className="progress-line"></div>
-                        <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>
-                            <span className="progress-number">2</span>
-                            <span className="progress-label">Location</span>
+                    )}
+
+                    {/* Signup Method Toggle */}
+                    {step === 1 && (
+                        <div className="login-method-toggle">
+                            <button
+                                type="button"
+                                className={`method-btn ${signupMethod === 'magic' ? 'active' : ''}`}
+                                onClick={() => setSignupMethod('magic')}
+                            >
+                                <Sparkles size={16} />
+                                Magic Link
+                            </button>
+                            <button
+                                type="button"
+                                className={`method-btn ${signupMethod === 'password' ? 'active' : ''}`}
+                                onClick={() => setSignupMethod('password')}
+                            >
+                                <Lock size={16} />
+                                Password
+                            </button>
                         </div>
-                    </div>
+                    )}
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="auth-form">
@@ -110,6 +178,13 @@ export default function Signup() {
                             <div className="auth-error">
                                 <AlertCircle size={16} />
                                 {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="auth-success">
+                                <CheckCircle size={16} />
+                                {success}
                             </div>
                         )}
 
@@ -147,46 +222,102 @@ export default function Signup() {
                                             required
                                         />
                                     </div>
-                                    <p className="form-hint">You can use any email address</p>
+                                    {signupMethod === 'magic' && (
+                                        <p className="form-hint">We'll send you a magic link - no password needed!</p>
+                                    )}
                                 </div>
 
-                                <div className="form-group">
-                                    <label className="form-label" htmlFor="password">Password</label>
-                                    <div className="input-wrapper">
-                                        <Lock className="input-icon" size={18} />
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            id="password"
-                                            name="password"
-                                            className="form-input"
-                                            placeholder="Create a password (min 6 characters)"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            required
-                                            minLength={6}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="input-toggle"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                        >
-                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
+                                {signupMethod === 'password' && (
+                                    <div className="form-group">
+                                        <label className="form-label" htmlFor="password">Password</label>
+                                        <div className="input-wrapper">
+                                            <Lock className="input-icon" size={18} />
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                id="password"
+                                                name="password"
+                                                className="form-input"
+                                                placeholder="Create a password (min 6 characters)"
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                required
+                                                minLength={6}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="input-toggle"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                            >
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <button
-                                    type="button"
-                                    className="btn btn-primary btn-lg w-full"
-                                    onClick={handleNext}
-                                >
-                                    Continue
-                                    <ArrowRight size={18} />
-                                </button>
+                                {/* Optional fields for magic signup */}
+                                {signupMethod === 'magic' && (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label" htmlFor="phone">Phone (Optional)</label>
+                                            <div className="input-wrapper">
+                                                <Phone className="input-icon" size={18} />
+                                                <input
+                                                    type="tel"
+                                                    id="phone"
+                                                    name="phone"
+                                                    className="form-input"
+                                                    placeholder="+91 98765 43210"
+                                                    value={formData.phone}
+                                                    onChange={handleChange}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label" htmlFor="campus">Campus</label>
+                                            <div className="input-wrapper">
+                                                <MapPin className="input-icon" size={18} />
+                                                <select
+                                                    id="campus"
+                                                    name="campus"
+                                                    className="form-input form-select"
+                                                    value={formData.campus}
+                                                    onChange={handleChange}
+                                                >
+                                                    {campuses.map(campus => (
+                                                        <option key={campus.id} value={campus.name}>
+                                                            {campus.name} - {campus.city}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {signupMethod === 'magic' ? (
+                                    <button
+                                        type="submit"
+                                        className={`btn btn-primary btn-lg w-full ${loading ? 'loading' : ''}`}
+                                        disabled={loading || success}
+                                    >
+                                        {loading ? 'Sending link...' : success ? 'Check your email!' : 'Send Magic Link'}
+                                        {!loading && !success && <Sparkles size={18} />}
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary btn-lg w-full"
+                                        onClick={handleNext}
+                                    >
+                                        Continue
+                                        <ArrowRight size={18} />
+                                    </button>
+                                )}
                             </>
                         )}
 
-                        {step === 2 && (
+                        {step === 2 && signupMethod === 'password' && (
                             <>
                                 <div className="form-group">
                                     <label className="form-label" htmlFor="phone">Phone Number (Optional)</label>
@@ -261,7 +392,7 @@ export default function Signup() {
                         )}
                     </form>
 
-                    {step === 1 && (
+                    {step === 1 && signupMethod === 'password' && (
                         <>
                             {/* Divider */}
                             <div className="auth-divider">
@@ -299,7 +430,76 @@ export default function Signup() {
                         By signing up, you agree to our <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>
                     </p>
                 </div>
+
+                {/* Backend Status */}
+                <div className="demo-hint">
+                    <p>
+                        <strong>Backend:</strong> {backendInfo.configured}
+                        {!backendInfo.isSupabase && (
+                            <span style={{ color: 'var(--warning)', marginLeft: '8px' }}>
+                                (Local server - won't work for other users)
+                            </span>
+                        )}
+                    </p>
+                </div>
             </div>
+
+            <style>{`
+                .login-method-toggle {
+                    display: flex;
+                    gap: 0.5rem;
+                    padding: 0.25rem;
+                    background: var(--bg-secondary);
+                    border-radius: 12px;
+                    margin-bottom: 1.5rem;
+                }
+
+                .method-btn {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    padding: 0.75rem 1rem;
+                    border: none;
+                    background: transparent;
+                    color: var(--text-secondary);
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .method-btn:hover {
+                    color: var(--text-primary);
+                }
+
+                .method-btn.active {
+                    background: var(--bg-primary);
+                    color: var(--primary);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .auth-success {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 0.5rem;
+                    padding: 1rem;
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                    border-radius: 12px;
+                    color: var(--success);
+                    font-size: 0.875rem;
+                    line-height: 1.5;
+                    margin-bottom: 1rem;
+                }
+
+                .auth-success svg {
+                    flex-shrink: 0;
+                    margin-top: 2px;
+                }
+            `}</style>
         </div>
     );
 }

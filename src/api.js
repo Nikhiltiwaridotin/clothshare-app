@@ -73,6 +73,9 @@ export const authAPI = useSupabase ? {
     // Send OTP (Magic Link) - NEW!
     sendOTP: supabaseAPI.authAPI.sendOTP,
     verifyOTP: supabaseAPI.authAPI.verifyOTP,
+
+    // Update password (for magic link users to set password)
+    updatePassword: supabaseAPI.authAPI.updatePassword,
 } : {
     // Local server fallback
     register: async (userData) => {

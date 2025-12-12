@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AuthCallback from './pages/AuthCallback';
+import SetPassword from './pages/SetPassword';
 import Browse from './pages/Browse';
 import ItemDetail from './pages/ItemDetail';
 import Dashboard from './pages/Dashboard';
@@ -24,6 +25,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/set-password" element={<SetPassword />} />
               <Route path="/browse" element={<Browse />} />
               <Route path="/item/:id" element={<ItemDetail />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -43,3 +45,4 @@ function App() {
 }
 
 export default App;
+

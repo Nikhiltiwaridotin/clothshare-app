@@ -263,6 +263,17 @@ export const authAPI = {
     getSession: async () => {
         const { data: { session } } = await supabase.auth.getSession();
         return session;
+    },
+
+    // Update/Set password (for users who signed up via magic link)
+    updatePassword: async (newPassword) => {
+        const { data, error } = await supabase.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) throw error;
+
+        return { success: true, message: 'Password updated successfully!' };
     }
 };
 

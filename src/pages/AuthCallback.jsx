@@ -35,9 +35,7 @@ export default function AuthCallback() {
                     localStorage.setItem('clothshare_user', JSON.stringify(userData.user));
 
                     setStatus('success');
-                    setMessage('Login successful! Redirecting...');
-
-                    setTimeout(() => navigate('/dashboard'), 1500);
+                    setMessage('Login successful!');
                 } else {
                     // No session found
                     setStatus('error');
@@ -77,9 +75,25 @@ export default function AuthCallback() {
                             <h2 style={{ marginTop: '1.5rem', color: 'var(--success)' }}>
                                 {message}
                             </h2>
-                            <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                                Taking you to your dashboard...
+                            <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                                You're now logged in!
                             </p>
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    onClick={() => navigate('/set-password')}
+                                    className="btn btn-primary"
+                                    style={{ padding: '0.75rem 1.5rem' }}
+                                >
+                                    Set Password
+                                </button>
+                                <button
+                                    onClick={() => navigate('/dashboard')}
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.75rem 1.5rem' }}
+                                >
+                                    Go to Dashboard
+                                </button>
+                            </div>
                         </>
                     )}
 

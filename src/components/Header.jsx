@@ -8,14 +8,15 @@ import {
     User,
     Plus,
     LogOut,
-    LayoutDashboard
+    LayoutDashboard,
+    ShoppingCart
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import './Header.css';
 
 export default function Header() {
     const location = useLocation();
-    const { isAuthenticated, currentUser, logout, isMobileMenuOpen, setIsMobileMenuOpen } = useApp();
+    const { isAuthenticated, currentUser, logout, isMobileMenuOpen, setIsMobileMenuOpen, cartCount } = useApp();
     const [showUserMenu, setShowUserMenu] = useState(false);
 
     const isActive = (path) => location.pathname === path;
@@ -57,6 +58,10 @@ export default function Header() {
                             </Link>
                             <Link to="/saved" className="btn btn-ghost btn-icon hide-mobile" title="Saved Items">
                                 <Heart size={20} />
+                            </Link>
+                            <Link to="/cart" className="btn btn-ghost btn-icon cart-icon hide-mobile" title="Cart">
+                                <ShoppingCart size={20} />
+                                {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
                             </Link>
                             <Link to="/list-item" className="btn btn-primary hide-mobile">
                                 <Plus size={18} />

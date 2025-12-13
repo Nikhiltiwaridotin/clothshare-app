@@ -312,47 +312,6 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-
-            {/* Footer */}
-            <footer className="footer">
-                <div className="container">
-                    <div className="footer-content">
-                        <div className="footer-brand">
-                            <Link to="/" className="footer-logo">
-                                <span className="logo-icon">👔👗</span>
-                                <span className="logo-text">ClothShare</span>
-                            </Link>
-                            <p className="footer-tagline">
-                                Sustainable fashion sharing for college students
-                            </p>
-                        </div>
-
-                        <div className="footer-links">
-                            <div className="footer-column">
-                                <h4 className="footer-heading">Platform</h4>
-                                <Link to="/browse">Browse Items</Link>
-                                <Link to="/how-it-works">How it Works</Link>
-                                <Link to="/list-item">List an Item</Link>
-                            </div>
-                            <div className="footer-column">
-                                <h4 className="footer-heading">Support</h4>
-                                <Link to="/faq">FAQ</Link>
-                                <Link to="/contact">Contact Us</Link>
-                                <Link to="/safety">Safety Tips</Link>
-                            </div>
-                            <div className="footer-column">
-                                <h4 className="footer-heading">Legal</h4>
-                                <Link to="/privacy">Privacy Policy</Link>
-                                <Link to="/terms">Terms of Service</Link>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="footer-bottom">
-                        <p>&copy; 2024 ClothShare. Made with ❤️ for students.</p>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 }

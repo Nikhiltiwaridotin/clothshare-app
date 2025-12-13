@@ -9,7 +9,7 @@ export default function Refunds() {
                 <div className="legal-header">
                     <RefreshCw className="legal-icon" size={48} />
                     <h1>Cancellation & Refunds</h1>
-                    <p className="legal-updated">Last updated: December 14, 2024</p>
+                    <p className="legal-updated">Last updated: December 14, 2025</p>
                 </div>
 
                 <div className="legal-content">

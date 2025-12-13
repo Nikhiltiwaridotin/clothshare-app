@@ -33,6 +33,12 @@ export function AppProvider({ children }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [savedItems, setSavedItems] = useState([]);
 
+    // Cart state
+    const [cartItems, setCartItems] = useState(() => {
+        const saved = localStorage.getItem('clothshare_cart');
+        return saved ? JSON.parse(saved) : [];
+    });
+
     // Logout function
     const logout = useCallback(() => {
         authAPI.logout();
@@ -276,7 +282,40 @@ export function AppProvider({ children }) {
 
         // Saved Items
         savedItems,
-        toggleSaveItem
+        toggleSaveItem,
+
+        // Cart
+        cartItems,
+        addToCart: (item, rentalDays = 1, startDate = null, endDate = null) => {
+            const existingIndex = cartItems.findIndex(ci => ci.id === item.id);
+            let newCart;
+            if (existingIndex >= 0) {
+                // Update existing item
+                newCart = [...cartItems];
+                newCart[existingIndex] = { ...item, rentalDays, startDate, endDate };
+            } else {
+                newCart = [...cartItems, { ...item, rentalDays, startDate, endDate }];
+            }
+            setCartItems(newCart);
+            localStorage.setItem('clothshare_cart', JSON.stringify(newCart));
+        },
+        removeFromCart: (itemId) => {
+            const newCart = cartItems.filter(item => item.id !== itemId);
+            setCartItems(newCart);
+            localStorage.setItem('clothshare_cart', JSON.stringify(newCart));
+        },
+        clearCart: () => {
+            setCartItems([]);
+            localStorage.removeItem('clothshare_cart');
+        },
+        getCartTotal: () => {
+            return cartItems.reduce((total, item) => {
+                const price = item.daily_price || item.dailyPrice || 0;
+                const deposit = item.security_deposit || item.securityDeposit || 0;
+                return total + (price * (item.rentalDays || 1)) + deposit;
+            }, 0);
+        },
+        cartCount: cartItems.length
     };
 
     return (

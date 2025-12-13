@@ -506,3 +506,50 @@
     padding: var(--space-16);
     color: var(--neutral-500);
 }
+
+/* Action Buttons - Add to Cart & Buy Now */
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+}
+
+.action-buttons .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    font-weight: var(--font-semibold);
+}
+
+.action-buttons .btn-secondary {
+    background: white;
+    border: 2px solid var(--primary-500);
+    color: var(--primary-600);
+}
+
+.action-buttons .btn-secondary:hover {
+    background: var(--primary-50);
+}
+
+.action-buttons .btn-secondary.added {
+    background: var(--success-500);
+    border-color: var(--success-500);
+    color: white;
+}
+
+.action-buttons .btn-primary {
+    background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+    border: none;
+}
+
+.action-buttons .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+@media (max-width: 480px) {
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+}

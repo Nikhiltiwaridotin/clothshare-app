@@ -17,6 +17,7 @@ import Terms from './pages/Terms';
 import Contact from './pages/Contact';
 import Shipping from './pages/Shipping';
 import Refunds from './pages/Refunds';
+import Cart from './pages/Cart';
 import './index.css';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/shipping" element={<Shipping />} />
               <Route path="/refunds" element={<Refunds />} />
+              <Route path="/cart" element={<Cart />} />
               {/* Placeholder routes */}
               <Route path="/saved" element={<Dashboard />} />
               <Route path="/profile" element={<Dashboard />} />

@@ -12,7 +12,9 @@ import {
     Clock,
     AlertCircle,
     CheckCircle,
-    CreditCard
+    CreditCard,
+    ShoppingCart,
+    Zap
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { itemsAPI, rentalsAPI } from '../api';
@@ -23,7 +25,8 @@ import './ItemDetail.css';
 export default function ItemDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { savedItems, toggleSaveItem, isAuthenticated, currentUser } = useApp();
+    const { savedItems, toggleSaveItem, isAuthenticated, currentUser, addToCart, cartItems } = useApp();
+    const [addedToCart, setAddedToCart] = useState(false);
 
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -308,18 +311,36 @@ export default function ItemDetail() {
                                             disabled={rentLoading || paymentComplete}
                                         />
                                     ) : (
-                                        <button
-                                            className={`btn btn-primary btn-lg w-full ${rentLoading ? 'loading' : ''}`}
-                                            onClick={handleRentRequest}
-                                            disabled={rentLoading || !rental}
-                                        >
-                                            {rentLoading ? 'Submitting...' : (
-                                                <>
-                                                    <CreditCard size={18} />
-                                                    {isAuthenticated ? 'Proceed to Payment' : 'Log in to Rent'}
-                                                </>
-                                            )}
-                                        </button>
+                                        <div className="action-buttons">
+                                            <button
+                                                className={`btn btn-secondary btn-lg ${addedToCart ? 'added' : ''}`}
+                                                onClick={() => {
+                                                    if (!isAuthenticated) {
+                                                        navigate('/login');
+                                                        return;
+                                                    }
+                                                    if (!rental) {
+                                                        setRentError('Please select rental dates first');
+                                                        return;
+                                                    }
+                                                    addToCart(item, rental.days, startDate, endDate);
+                                                    setAddedToCart(true);
+                                                    setTimeout(() => setAddedToCart(false), 2000);
+                                                }}
+                                                disabled={!rental}
+                                            >
+                                                <ShoppingCart size={18} />
+                                                {addedToCart ? 'Added to Cart!' : 'Add to Cart'}
+                                            </button>
+                                            <button
+                                                className={`btn btn-primary btn-lg ${rentLoading ? 'loading' : ''}`}
+                                                onClick={handleRentRequest}
+                                                disabled={rentLoading || !rental}
+                                            >
+                                                <Zap size={18} />
+                                                {isAuthenticated ? 'Buy Now' : 'Log in to Rent'}
+                                            </button>
+                                        </div>
                                     )}
 
                                     <div className="trust-badges">

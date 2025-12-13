@@ -48,9 +48,11 @@ export const createOrder = async (amount, currency = 'INR', receipt = null) => {
         });
 
         const data = await response.json();
+        console.log('API Response:', data);
 
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to create order');
+            console.error('Order creation API error:', data);
+            throw new Error(data.details || data.error || 'Failed to create order');
         }
 
         console.log('Order created:', data.order);

@@ -30,16 +30,35 @@ export const loadRazorpayScript = () => {
     });
 };
 
-// Create a payment order (in production, this should be done on the server)
+// Create a payment order via backend API
 export const createOrder = async (amount, currency = 'INR', receipt = null) => {
-    // For demo/client-side only mode, we don't create a real order
-    // In production, this should call your backend which creates order via Razorpay API
-    return {
-        id: null, // No order_id for client-side only mode
-        amount: amount * 100, // Razorpay expects amount in paise
-        currency,
-        receipt: receipt || `receipt_${Date.now()}`
-    };
+    console.log('Creating order on backend for amount:', amount);
+
+    try {
+        const response = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: amount,
+                currency: currency,
+                receipt: receipt || `receipt_${Date.now()}`
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to create order');
+        }
+
+        console.log('Order created:', data.order);
+        return data.order;
+    } catch (error) {
+        console.error('Order creation failed:', error);
+        throw error;
+    }
 };
 
 // Initialize Razorpay payment
@@ -54,7 +73,7 @@ export const initiatePayment = async ({
     onFailure,
     onDismiss
 }) => {
-    console.log('Initiating payment for amount:', amount);
+    console.log('Initiating payment for amount:', amount, 'Order ID:', orderId);
 
     const scriptLoaded = await loadRazorpayScript();
 
@@ -63,18 +82,21 @@ export const initiatePayment = async ({
         throw new Error('Failed to load Razorpay SDK');
     }
 
+    if (!orderId) {
+        console.error('No order_id provided - this will cause checkout to fail');
+        throw new Error('Order ID is required for payment');
+    }
+
     const options = {
         key: RAZORPAY_KEY_ID,
-        amount: amount * 100, // Amount in paise
+        amount: amount * 100, // Amount in paise (for display only, actual amount comes from order)
         currency,
         name,
         description,
-        // Don't include order_id for client-side only mode
-        // order_id is only needed when you create orders on backend
+        order_id: orderId, // CRITICAL: This must be a valid order_id from backend
         image: '/favicon.ico',
         handler: function (response) {
             console.log('Payment successful:', response);
-            // Payment successful
             if (onSuccess) {
                 onSuccess({
                     razorpay_payment_id: response.razorpay_payment_id,
@@ -92,7 +114,7 @@ export const initiatePayment = async ({
             rental_id: prefill.rentalId || ''
         },
         theme: {
-            color: '#6366f1' // Primary color
+            color: '#6366f1'
         },
         modal: {
             ondismiss: function () {
@@ -104,7 +126,7 @@ export const initiatePayment = async ({
         }
     };
 
-    console.log('Razorpay options:', { ...options, key: '***hidden***' });
+    console.log('Opening Razorpay checkout with order_id:', orderId);
 
     try {
         const razorpay = new window.Razorpay(options);
@@ -120,7 +142,6 @@ export const initiatePayment = async ({
                 });
             }
         });
-        console.log('Opening Razorpay modal...');
         razorpay.open();
     } catch (error) {
         console.error('Razorpay error:', error);
@@ -132,8 +153,6 @@ export const initiatePayment = async ({
 
 // Verify payment (in production, this should be done on the server)
 export const verifyPayment = async (paymentData) => {
-    // In production, send to your backend to verify signature
-    // using Razorpay's webhook or verification endpoint
     console.log('Payment verification data:', paymentData);
     return { verified: true, ...paymentData };
 };
@@ -144,4 +163,3 @@ export default {
     initiatePayment,
     verifyPayment
 };
-

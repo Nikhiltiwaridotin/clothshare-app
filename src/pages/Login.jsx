@@ -1,15 +1,55 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import './Auth.css';
 
 export default function Login() {
+    const navigate = useNavigate();
+    const { login } = useApp();
+
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [socialLoading, setSocialLoading] = useState('');
+
+    const handleChange = (e) => {
+        setFormData(prev => ({
+            ...prev,
+            [e.target.name]: e.target.value
+        }));
+        setError('');
+    };
+
+    const handlePasswordLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        if (!formData.email || !formData.password) {
+            setError('Please enter both email and password');
+            setLoading(false);
+            return;
+        }
+
+        const result = await login(formData.email, formData.password);
+
+        if (result.success) {
+            navigate('/dashboard');
+        } else {
+            setError(result.error || 'Login failed. Please check your credentials.');
+        }
+
+        setLoading(false);
+    };
 
     const handleGoogleLogin = async () => {
-        setLoading('google');
+        setSocialLoading('google');
         setError('');
         try {
             const { error } = await supabase.auth.signInWithOAuth({
@@ -21,12 +61,12 @@ export default function Login() {
             if (error) throw error;
         } catch (err) {
             setError(err.message || 'Failed to login with Google');
-            setLoading('');
+            setSocialLoading('');
         }
     };
 
     const handleGitHubLogin = async () => {
-        setLoading('github');
+        setSocialLoading('github');
         setError('');
         try {
             const { error } = await supabase.auth.signInWithOAuth({
@@ -38,7 +78,7 @@ export default function Login() {
             if (error) throw error;
         } catch (err) {
             setError(err.message || 'Failed to login with GitHub');
-            setLoading('');
+            setSocialLoading('');
         }
     };
 
@@ -66,10 +106,10 @@ export default function Login() {
                     {/* Social Login */}
                     <div className="social-login-section">
                         <button
-                            className={`btn btn-secondary social-btn w-full ${loading === 'google' ? 'loading' : ''}`}
+                            className={`btn btn-secondary social-btn w-full ${socialLoading === 'google' ? 'loading' : ''}`}
                             type="button"
                             onClick={handleGoogleLogin}
-                            disabled={!!loading}
+                            disabled={!!socialLoading || loading}
                         >
                             <svg viewBox="0 0 24 24" width="20" height="20">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -77,21 +117,82 @@ export default function Login() {
                                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
-                            <span>{loading === 'google' ? 'Connecting...' : 'Continue with Google'}</span>
+                            <span>{socialLoading === 'google' ? 'Connecting...' : 'Continue with Google'}</span>
                         </button>
 
                         <button
-                            className={`btn btn-secondary social-btn w-full ${loading === 'github' ? 'loading' : ''}`}
+                            className={`btn btn-secondary social-btn w-full ${socialLoading === 'github' ? 'loading' : ''}`}
                             type="button"
                             onClick={handleGitHubLogin}
-                            disabled={!!loading}
+                            disabled={!!socialLoading || loading}
                         >
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                             </svg>
-                            <span>{loading === 'github' ? 'Connecting...' : 'Continue with GitHub'}</span>
+                            <span>{socialLoading === 'github' ? 'Connecting...' : 'Continue with GitHub'}</span>
                         </button>
                     </div>
+
+                    {/* Divider */}
+                    <div className="auth-divider">
+                        <span>or login with password</span>
+                    </div>
+
+                    {/* Password Login Form */}
+                    <form onSubmit={handlePasswordLogin} className="auth-form">
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="email">Email</label>
+                            <div className="input-wrapper">
+                                <Mail className="input-icon" size={18} />
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    className="form-input"
+                                    placeholder="your.email@example.com"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <div className="form-label-row">
+                                <label className="form-label" htmlFor="password">Password</label>
+                                <Link to="/forgot-password" className="form-link">Forgot password?</Link>
+                            </div>
+                            <div className="input-wrapper">
+                                <Lock className="input-icon" size={18} />
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    id="password"
+                                    name="password"
+                                    className="form-input"
+                                    placeholder="Enter your password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className="input-toggle"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className={`btn btn-primary btn-lg w-full ${loading ? 'loading' : ''}`}
+                            disabled={loading || !!socialLoading}
+                        >
+                            {loading ? 'Logging in...' : 'Log in'}
+                            {!loading && <ArrowRight size={18} />}
+                        </button>
+                    </form>
 
                     {/* Footer */}
                     <p className="auth-footer">

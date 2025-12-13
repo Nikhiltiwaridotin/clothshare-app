@@ -1,8 +1,11 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI, itemsAPI } from '../api';
 import { campuses, categories } from '../data/mockData';
 
 const AppContext = createContext();
+
+// Session timeout in milliseconds (30 minutes)
+const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 export function AppProvider({ children }) {
     // User state
@@ -30,24 +33,73 @@ export function AppProvider({ children }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [savedItems, setSavedItems] = useState([]);
 
+    // Logout function
+    const logout = useCallback(() => {
+        authAPI.logout();
+        localStorage.removeItem('clothshare_login_time');
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+    }, []);
+
+    // Check session timeout
+    const checkSessionTimeout = useCallback(() => {
+        const loginTime = localStorage.getItem('clothshare_login_time');
+        if (loginTime) {
+            const elapsed = Date.now() - parseInt(loginTime, 10);
+            if (elapsed > SESSION_TIMEOUT) {
+                console.log('Session expired after 30 minutes');
+                logout();
+                return true;
+            }
+        }
+        return false;
+    }, [logout]);
+
+    // Update login time when user authenticates
+    const updateLoginTime = useCallback(() => {
+        localStorage.setItem('clothshare_login_time', Date.now().toString());
+    }, []);
+
     // Check authentication on mount
     useEffect(() => {
         const checkAuth = async () => {
+            // First check if session has expired
+            if (checkSessionTimeout()) {
+                setAuthLoading(false);
+                return;
+            }
+
             const token = authAPI.getToken();
             if (token) {
                 try {
                     const data = await authAPI.getMe();
                     setCurrentUser(data.user);
                     setIsAuthenticated(true);
+
+                    // If no login time exists, set it now
+                    if (!localStorage.getItem('clothshare_login_time')) {
+                        updateLoginTime();
+                    }
                 } catch (error) {
                     console.error('Auth check failed:', error);
-                    authAPI.logout();
+                    logout();
                 }
             }
             setAuthLoading(false);
         };
         checkAuth();
-    }, []);
+    }, [checkSessionTimeout, logout, updateLoginTime]);
+
+    // Session timeout checker - runs every minute
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const intervalId = setInterval(() => {
+            checkSessionTimeout();
+        }, 60000); // Check every minute
+
+        return () => clearInterval(intervalId);
+    }, [isAuthenticated, checkSessionTimeout]);
 
     // Load items from API
     useEffect(() => {
@@ -82,6 +134,7 @@ export function AppProvider({ children }) {
             const data = await authAPI.login({ email, password });
             setCurrentUser(data.user);
             setIsAuthenticated(true);
+            updateLoginTime(); // Set login time on successful login
             return { success: true, user: data.user };
         } catch (error) {
             return { success: false, error: error.message };
@@ -94,17 +147,11 @@ export function AppProvider({ children }) {
             const data = await authAPI.register(userData);
             setCurrentUser(data.user);
             setIsAuthenticated(true);
+            updateLoginTime(); // Set login time on successful signup
             return { success: true, user: data.user };
         } catch (error) {
             return { success: false, error: error.message };
         }
-    };
-
-    // Logout function
-    const logout = () => {
-        authAPI.logout();
-        setCurrentUser(null);
-        setIsAuthenticated(false);
     };
 
     // Save/unsave item
@@ -193,6 +240,7 @@ export function AppProvider({ children }) {
         login,
         signup,
         logout,
+        updateLoginTime,
 
         // Location
         selectedCampus,

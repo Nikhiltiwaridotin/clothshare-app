@@ -11,6 +11,8 @@ import ItemDetail from './pages/ItemDetail';
 import Dashboard from './pages/Dashboard';
 import ListItem from './pages/ListItem';
 import FAQ from './pages/FAQ';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 import './index.css';
 
 function App() {
@@ -32,6 +34,8 @@ function App() {
               <Route path="/list-item" element={<ListItem />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/how-it-works" element={<Home />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<Terms />} />
               {/* Placeholder routes */}
               <Route path="/saved" element={<Dashboard />} />
               <Route path="/profile" element={<Dashboard />} />
@@ -45,4 +49,3 @@ function App() {
 }
 
 export default App;
-

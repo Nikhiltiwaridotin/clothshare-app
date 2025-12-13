@@ -7,7 +7,7 @@ import './Auth.css';
 
 export default function AuthCallback() {
     const navigate = useNavigate();
-    const { setCurrentUser, setIsAuthenticated } = useApp();
+    const { setCurrentUser, setIsAuthenticated, updateLoginTime } = useApp();
     const [status, setStatus] = useState('processing');
     const [message, setMessage] = useState('Verifying your login...');
 
@@ -39,6 +39,7 @@ export default function AuthCallback() {
                     // Update context state so user is authenticated
                     setCurrentUser(userData.user);
                     setIsAuthenticated(true);
+                    updateLoginTime(); // Start session timer
 
                     setStatus('success');
                     setMessage('Login successful!');

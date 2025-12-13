@@ -13,6 +13,9 @@ import ListItem from './pages/ListItem';
 import FAQ from './pages/FAQ';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
+import Contact from './pages/Contact';
+import Shipping from './pages/Shipping';
+import Refunds from './pages/Refunds';
 import './index.css';
 
 function App() {
@@ -36,6 +39,9 @@ function App() {
               <Route path="/how-it-works" element={<Home />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/shipping" element={<Shipping />} />
+              <Route path="/refunds" element={<Refunds />} />
               {/* Placeholder routes */}
               <Route path="/saved" element={<Dashboard />} />
               <Route path="/profile" element={<Dashboard />} />

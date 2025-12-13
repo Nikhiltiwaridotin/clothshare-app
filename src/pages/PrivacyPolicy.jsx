@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
                 <div className="legal-header">
                     <Shield className="legal-icon" size={48} />
                     <h1>Privacy Policy</h1>
-                    <p className="legal-updated">Last updated: December 14, 2024</p>
+                    <p className="legal-updated">Last updated: December 14, 2025</p>
                 </div>
 
                 <div className="legal-content">

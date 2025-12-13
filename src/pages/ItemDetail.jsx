@@ -11,11 +11,13 @@ import {
     Shield,
     Clock,
     AlertCircle,
-    CheckCircle
+    CheckCircle,
+    CreditCard
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { itemsAPI, rentalsAPI } from '../api';
 import { items as mockItems, getUserById, getReviewsByItemId } from '../data/mockData';
+import PaymentButton from '../components/PaymentButton';
 import './ItemDetail.css';
 
 export default function ItemDetail() {
@@ -31,6 +33,8 @@ export default function ItemDetail() {
     const [rentLoading, setRentLoading] = useState(false);
     const [rentError, setRentError] = useState('');
     const [rentSuccess, setRentSuccess] = useState(false);
+    const [showPayment, setShowPayment] = useState(false);
+    const [paymentComplete, setPaymentComplete] = useState(false);
 
     const isSaved = savedItems.includes(id);
 
@@ -116,14 +120,24 @@ export default function ItemDetail() {
             return;
         }
 
+        // Show payment instead of direct request
+        setShowPayment(true);
+        setRentError('');
+    };
+
+    const handlePaymentSuccess = async (paymentData) => {
         setRentLoading(true);
         setRentError('');
+        setPaymentComplete(true);
 
         try {
             const result = await rentalsAPI.create({
                 item_id: item.id,
                 start_date: startDate,
-                end_date: endDate
+                end_date: endDate,
+                payment_id: paymentData.razorpay_payment_id,
+                payment_status: 'paid',
+                total_amount: rental ? Math.round(rental.total) + rental.deposit : 0
             });
 
             if (result.success) {
@@ -134,6 +148,11 @@ export default function ItemDetail() {
         }
 
         setRentLoading(false);
+    };
+
+    const handlePaymentFailure = (error) => {
+        setRentError(error.description || 'Payment failed. Please try again.');
+        setShowPayment(false);
     };
 
     const images = item.images || ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'];
@@ -274,18 +293,34 @@ export default function ItemDetail() {
                                         </div>
                                     )}
 
-                                    <button
-                                        className={`btn btn-primary btn-lg w-full ${rentLoading ? 'loading' : ''}`}
-                                        onClick={handleRentRequest}
-                                        disabled={rentLoading}
-                                    >
-                                        {rentLoading ? 'Submitting...' : (
-                                            <>
-                                                <Calendar size={18} />
-                                                {isAuthenticated ? 'Request to Rent' : 'Log in to Rent'}
-                                            </>
-                                        )}
-                                    </button>
+                                    {showPayment && rental ? (
+                                        <PaymentButton
+                                            amount={Math.round(rental.total)}
+                                            securityDeposit={rental.deposit}
+                                            itemTitle={item.title}
+                                            rentalDays={rental.days}
+                                            userName={currentUser?.name}
+                                            userEmail={currentUser?.email}
+                                            userPhone={currentUser?.phone}
+                                            rentalId={`${item.id}_${Date.now()}`}
+                                            onPaymentSuccess={handlePaymentSuccess}
+                                            onPaymentFailure={handlePaymentFailure}
+                                            disabled={rentLoading || paymentComplete}
+                                        />
+                                    ) : (
+                                        <button
+                                            className={`btn btn-primary btn-lg w-full ${rentLoading ? 'loading' : ''}`}
+                                            onClick={handleRentRequest}
+                                            disabled={rentLoading || !rental}
+                                        >
+                                            {rentLoading ? 'Submitting...' : (
+                                                <>
+                                                    <CreditCard size={18} />
+                                                    {isAuthenticated ? 'Proceed to Payment' : 'Log in to Rent'}
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
 
                                     <div className="trust-badges">
                                         <div className="trust-badge">

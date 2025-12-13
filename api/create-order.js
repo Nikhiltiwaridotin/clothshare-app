@@ -17,17 +17,34 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { amount, currency = 'INR', receipt } = req.body || {};
+    // Parse body - Vercel should auto-parse JSON but let's be safe
+    let body = req.body;
+    if (typeof body === 'string') {
+        try {
+            body = JSON.parse(body);
+        } catch (e) {
+            body = {};
+        }
+    }
+    body = body || {};
+
+    const { amount, currency = 'INR', receipt } = body;
+
+    console.log('Received request body:', JSON.stringify(body));
+    console.log('Amount:', amount, 'Type:', typeof amount);
 
     if (!amount || amount <= 0) {
-        return res.status(400).json({ error: 'Valid amount is required', received: amount });
+        return res.status(400).json({
+            error: 'Valid amount is required',
+            received: amount,
+            receivedType: typeof amount,
+            fullBody: body
+        });
     }
 
     // Check for required environment variables
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-    console.log('Environment check - Key ID exists:', !!keyId, 'Key Secret exists:', !!keySecret);
 
     if (!keyId || !keySecret) {
         console.error('Razorpay credentials not configured');
@@ -41,11 +58,12 @@ module.exports = async function handler(req, res) {
             key_secret: keySecret
         });
 
-        console.log('Creating order for amount:', amount, 'paise:', Math.round(amount * 100));
+        const amountInPaise = Math.round(amount * 100);
+        console.log('Creating order - Amount in rupees:', amount, 'Amount in paise:', amountInPaise);
 
         // Create order - amount must be in paise (smallest currency unit)
         const order = await razorpay.orders.create({
-            amount: Math.round(amount * 100), // Convert to paise
+            amount: amountInPaise,
             currency: currency,
             receipt: receipt || `receipt_${Date.now()}`,
             notes: {
@@ -66,11 +84,13 @@ module.exports = async function handler(req, res) {
         });
     } catch (error) {
         console.error('Razorpay order creation failed:', error.message);
-        console.error('Full error:', JSON.stringify(error, null, 2));
         return res.status(500).json({
             error: 'Failed to create order',
             details: error.message,
-            code: error.statusCode || error.code
+            code: error.statusCode || error.code,
+            receivedAmount: amount,
+            amountInPaise: Math.round(amount * 100)
         });
     }
 };
+

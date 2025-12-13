@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, User, Phone, MapPin, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { Mail, User, Phone, MapPin, AlertCircle, CheckCircle, Sparkles, Clock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { authAPI } from '../api';
 import { supabase } from '../lib/supabase';
@@ -20,6 +20,15 @@ export default function Signup() {
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const [socialLoading, setSocialLoading] = useState('');
+    const [cooldown, setCooldown] = useState(0);
+
+    // Cooldown timer effect
+    useEffect(() => {
+        if (cooldown > 0) {
+            const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [cooldown]);
 
     const handleChange = (e) => {
         setFormData(prev => ({
@@ -32,6 +41,13 @@ export default function Signup() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Check cooldown
+        if (cooldown > 0) {
+            setError(`Please wait ${cooldown} seconds before requesting another email`);
+            return;
+        }
+
         setLoading(true);
         setError('');
         setSuccess('');
@@ -59,8 +75,17 @@ export default function Signup() {
                 campus: formData.campus,
                 building: formData.building
             }));
+
+            // Start 60 second cooldown (Supabase rate limit)
+            setCooldown(60);
         } catch (err) {
-            setError(err.message || 'Failed to send magic link. Please try again.');
+            // Check for rate limit error
+            if (err.message?.includes('rate') || err.message?.includes('limit') || err.message?.includes('seconds')) {
+                setError('Please wait a moment before requesting another email.');
+                setCooldown(60);
+            } else {
+                setError(err.message || 'Failed to send magic link. Please try again.');
+            }
         }
 
         setLoading(false);
@@ -141,6 +166,14 @@ export default function Signup() {
                         <div className="auth-success">
                             <CheckCircle size={16} />
                             {success}
+                        </div>
+                    )}
+
+                    {/* Cooldown Timer */}
+                    {cooldown > 0 && (
+                        <div className="cooldown-notice">
+                            <Clock size={16} />
+                            <span>You can request a new email in {cooldown}s</span>
                         </div>
                     )}
 
@@ -255,10 +288,10 @@ export default function Signup() {
                         <button
                             type="submit"
                             className={`btn btn-primary btn-lg w-full ${loading ? 'loading' : ''}`}
-                            disabled={loading || success || !!socialLoading}
+                            disabled={loading || success || !!socialLoading || cooldown > 0}
                         >
-                            {loading ? 'Sending link...' : success ? 'Check your email!' : 'Send Magic Link'}
-                            {!loading && !success && <Sparkles size={18} />}
+                            {loading ? 'Sending link...' : cooldown > 0 ? `Wait ${cooldown}s` : success ? 'Check your email!' : 'Send Magic Link'}
+                            {!loading && !success && cooldown === 0 && <Sparkles size={18} />}
                         </button>
                     </form>
 
@@ -313,6 +346,19 @@ export default function Signup() {
                 .auth-success svg {
                     flex-shrink: 0;
                     margin-top: 2px;
+                }
+
+                .cooldown-notice {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.75rem 1rem;
+                    background: rgba(59, 130, 246, 0.1);
+                    border: 1px solid rgba(59, 130, 246, 0.3);
+                    border-radius: 12px;
+                    color: var(--primary);
+                    font-size: 0.875rem;
+                    margin-bottom: 1rem;
                 }
             `}</style>
         </div>

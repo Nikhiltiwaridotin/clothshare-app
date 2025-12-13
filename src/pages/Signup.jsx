@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, MapPin, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { authAPI, getBackendInfo } from '../api';
+import { authAPI } from '../api';
 import { isSupabaseConfigured } from '../lib/supabase';
 import './Auth.css';
 
@@ -10,12 +10,9 @@ export default function Signup() {
     const navigate = useNavigate();
     const { signup, campuses } = useApp();
 
-    // Check if Supabase is configured - if not, disable magic link option
-    const supabaseAvailable = isSupabaseConfigured();
-
     const [step, setStep] = useState(1);
-    // Default to password if Supabase is not configured
-    const [signupMethod, setSignupMethod] = useState(supabaseAvailable ? 'magic' : 'password');
+    // Default to magic link
+    const [signupMethod, setSignupMethod] = useState('magic');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -28,8 +25,6 @@ export default function Signup() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const backendInfo = getBackendInfo();
 
     const handleChange = (e) => {
         setFormData(prev => ({
@@ -155,8 +150,8 @@ export default function Signup() {
                         </div>
                     )}
 
-                    {/* Signup Method Toggle - Only show if Supabase is configured */}
-                    {step === 1 && supabaseAvailable && (
+                    {/* Signup Method Toggle */}
+                    {step === 1 && (
                         <div className="login-method-toggle">
                             <button
                                 type="button"

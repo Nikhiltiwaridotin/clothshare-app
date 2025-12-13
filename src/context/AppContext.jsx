@@ -186,7 +186,9 @@ export function AppProvider({ children }) {
     const value = {
         // User
         currentUser,
+        setCurrentUser,
         isAuthenticated,
+        setIsAuthenticated,
         authLoading,
         login,
         signup,

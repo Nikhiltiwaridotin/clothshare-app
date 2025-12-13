@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { authAPI } from '../api';
+import { useApp } from '../context/AppContext';
 import './Auth.css';
 
 export default function AuthCallback() {
     const navigate = useNavigate();
+    const { setCurrentUser, setIsAuthenticated } = useApp();
     const [status, setStatus] = useState('processing');
     const [message, setMessage] = useState('Verifying your login...');
 
@@ -34,6 +36,10 @@ export default function AuthCallback() {
                     const userData = await authAPI.getMe();
                     localStorage.setItem('clothshare_user', JSON.stringify(userData.user));
 
+                    // Update context state so user is authenticated
+                    setCurrentUser(userData.user);
+                    setIsAuthenticated(true);
+
                     setStatus('success');
                     setMessage('Login successful!');
                 } else {
@@ -51,7 +57,7 @@ export default function AuthCallback() {
         };
 
         handleCallback();
-    }, [navigate]);
+    }, [navigate, setCurrentUser, setIsAuthenticated]);
 
     return (
         <div className="auth-page">

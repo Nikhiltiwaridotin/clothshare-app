@@ -3,28 +3,39 @@
 
 const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxxxxxxxxxxx';
 
+// Log the key for debugging (remove in production)
+console.log('Razorpay Key:', RAZORPAY_KEY_ID ? 'Key is set' : 'Key is NOT set');
+
 // Load Razorpay script dynamically
 export const loadRazorpayScript = () => {
     return new Promise((resolve) => {
         if (window.Razorpay) {
+            console.log('Razorpay SDK already loaded');
             resolve(true);
             return;
         }
 
+        console.log('Loading Razorpay SDK...');
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
+        script.onload = () => {
+            console.log('Razorpay SDK loaded successfully');
+            resolve(true);
+        };
+        script.onerror = () => {
+            console.error('Failed to load Razorpay SDK');
+            resolve(false);
+        };
         document.body.appendChild(script);
     });
 };
 
 // Create a payment order (in production, this should be done on the server)
 export const createOrder = async (amount, currency = 'INR', receipt = null) => {
-    // For demo purposes, we'll create a mock order
+    // For demo/client-side only mode, we don't create a real order
     // In production, this should call your backend which creates order via Razorpay API
     return {
-        id: `order_${Date.now()}`,
+        id: null, // No order_id for client-side only mode
         amount: amount * 100, // Razorpay expects amount in paise
         currency,
         receipt: receipt || `receipt_${Date.now()}`
@@ -43,9 +54,12 @@ export const initiatePayment = async ({
     onFailure,
     onDismiss
 }) => {
+    console.log('Initiating payment for amount:', amount);
+
     const scriptLoaded = await loadRazorpayScript();
 
     if (!scriptLoaded) {
+        console.error('Razorpay SDK failed to load');
         throw new Error('Failed to load Razorpay SDK');
     }
 
@@ -55,9 +69,11 @@ export const initiatePayment = async ({
         currency,
         name,
         description,
-        order_id: orderId,
+        // Don't include order_id for client-side only mode
+        // order_id is only needed when you create orders on backend
         image: '/favicon.ico',
         handler: function (response) {
+            console.log('Payment successful:', response);
             // Payment successful
             if (onSuccess) {
                 onSuccess({
@@ -80,6 +96,7 @@ export const initiatePayment = async ({
         },
         modal: {
             ondismiss: function () {
+                console.log('Payment modal dismissed');
                 if (onDismiss) {
                     onDismiss();
                 }
@@ -87,9 +104,12 @@ export const initiatePayment = async ({
         }
     };
 
+    console.log('Razorpay options:', { ...options, key: '***hidden***' });
+
     try {
         const razorpay = new window.Razorpay(options);
         razorpay.on('payment.failed', function (response) {
+            console.error('Payment failed:', response.error);
             if (onFailure) {
                 onFailure({
                     code: response.error.code,
@@ -100,8 +120,10 @@ export const initiatePayment = async ({
                 });
             }
         });
+        console.log('Opening Razorpay modal...');
         razorpay.open();
     } catch (error) {
+        console.error('Razorpay error:', error);
         if (onFailure) {
             onFailure({ description: error.message });
         }
@@ -122,3 +144,4 @@ export default {
     initiatePayment,
     verifyPayment
 };
+

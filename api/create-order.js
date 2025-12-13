@@ -1,9 +1,9 @@
 // Vercel Serverless Function: Create Razorpay Order
 // Endpoint: POST /api/create-order
 
-import Razorpay from 'razorpay';
+const Razorpay = require('razorpay');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -17,15 +17,17 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { amount, currency = 'INR', receipt } = req.body;
+    const { amount, currency = 'INR', receipt } = req.body || {};
 
     if (!amount || amount <= 0) {
-        return res.status(400).json({ error: 'Valid amount is required' });
+        return res.status(400).json({ error: 'Valid amount is required', received: amount });
     }
 
     // Check for required environment variables
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    console.log('Environment check - Key ID exists:', !!keyId, 'Key Secret exists:', !!keySecret);
 
     if (!keyId || !keySecret) {
         console.error('Razorpay credentials not configured');
@@ -39,6 +41,8 @@ export default async function handler(req, res) {
             key_secret: keySecret
         });
 
+        console.log('Creating order for amount:', amount, 'paise:', Math.round(amount * 100));
+
         // Create order - amount must be in paise (smallest currency unit)
         const order = await razorpay.orders.create({
             amount: Math.round(amount * 100), // Convert to paise
@@ -49,7 +53,7 @@ export default async function handler(req, res) {
             }
         });
 
-        console.log('Order created:', order.id);
+        console.log('Order created successfully:', order.id);
 
         return res.status(200).json({
             success: true,
@@ -61,10 +65,12 @@ export default async function handler(req, res) {
             }
         });
     } catch (error) {
-        console.error('Razorpay order creation failed:', error);
+        console.error('Razorpay order creation failed:', error.message);
+        console.error('Full error:', JSON.stringify(error, null, 2));
         return res.status(500).json({
             error: 'Failed to create order',
-            details: error.message
+            details: error.message,
+            code: error.statusCode || error.code
         });
     }
-}
+};

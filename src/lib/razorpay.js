@@ -37,6 +37,9 @@ export const createOrder = async (amount, currency = 'INR', receipt = null) => {
     console.log('Creating order on backend for amount:', amount);
 
     try {
+        // Razorpay receipt has a max length of 40 characters
+        const safeReceipt = receipt ? receipt.substring(0, 40) : `rcpt_${Date.now()}`;
+
         const response = await fetch('/api/create-order', {
             method: 'POST',
             headers: {
@@ -45,7 +48,7 @@ export const createOrder = async (amount, currency = 'INR', receipt = null) => {
             body: JSON.stringify({
                 amount: amount,
                 currency: currency,
-                receipt: receipt || `receipt_${Date.now()}`
+                receipt: safeReceipt
             })
         });
 

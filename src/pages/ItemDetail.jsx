@@ -113,10 +113,7 @@ export default function ItemDetail() {
     const rental = calculateTotal();
 
     const handleRentRequest = async () => {
-        console.log('handleRentRequest called', { isAuthenticated, startDate, endDate, rental });
-
         if (!isAuthenticated) {
-            console.log('User not authenticated, redirecting to login');
             navigate('/login');
             return;
         }
@@ -127,7 +124,6 @@ export default function ItemDetail() {
         }
 
         // Show payment instead of direct request
-        console.log('Setting showPayment to true');
         setShowPayment(true);
         setRentError('');
     };

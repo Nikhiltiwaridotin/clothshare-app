@@ -1,76 +1,76 @@
-/* ClothShare Design System - Modern 70-20-10 */
+/* ClothShare Design System - Warm 70-20-10 */
 
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
 
 /* ============================================
    CSS Variables - Design Tokens (70-20-10 Rule)
-   70% Neutral | 20% Brand | 10% Accent
+   70% Cream/Beige | 20% Terracotta | 10% Coral
    ============================================ */
 :root {
   /* ========== DOMINANT COLORS (70%) ========== */
-  /* Clean neutrals for backgrounds and text */
-  --neutral-50: #FAFBFC;
-  --neutral-100: #F1F3F4;
-  --neutral-200: #E8EAED;
-  --neutral-300: #DADCE0;
-  --neutral-400: #9AA0A6;
-  --neutral-500: #5F6368;
-  --neutral-600: #3C4043;
-  --neutral-700: #2D3436;
-  --neutral-800: #1A1A2E;
-  --neutral-900: #0F0F1A;
-  --neutral-950: #0A0A0F;
+  /* Warm Cream/Beige for backgrounds */
+  --neutral-50: #FAF3E0;
+  --neutral-100: #F5ECD5;
+  --neutral-200: #EDE4CC;
+  --neutral-300: #DDD5C0;
+  --neutral-400: #B5A890;
+  --neutral-500: #8A7F6B;
+  --neutral-600: #5C5347;
+  --neutral-700: #3D3630;
+  --neutral-800: #2A2420;
+  --neutral-900: #1A1614;
+  --neutral-950: #0D0B0A;
 
   /* ========== BRAND COLORS (20%) ========== */
-  /* Deep Purple - Primary brand color */
-  --primary-50: #F0EEFF;
-  --primary-100: #E0DDFF;
-  --primary-200: #C4BFFF;
-  --primary-300: #A29BFE;
-  --primary-400: #8075F2;
-  --primary-500: #6C5CE7;
-  --primary-600: #5B4ED1;
-  --primary-700: #4A3FB8;
-  --primary-800: #3D3499;
-  --primary-900: #2C2570;
+  /* Rich Terracotta/Rust - Primary brand color */
+  --primary-50: #FDF5F2;
+  --primary-100: #FAEAE4;
+  --primary-200: #F4D0C4;
+  --primary-300: #EAB5A3;
+  --primary-400: #D98A6F;
+  --primary-500: #C1583E;
+  --primary-600: #A84A33;
+  --primary-700: #8E3E2B;
+  --primary-800: #733223;
+  --primary-900: #5A281C;
 
-  /* Secondary - Soft Purple for supporting elements */
-  --secondary-50: #F5F3FF;
-  --secondary-100: #EDE9FE;
-  --secondary-200: #DDD6FE;
-  --secondary-300: #C4B5FD;
-  --secondary-400: #A78BFA;
-  --secondary-500: #8B5CF6;
-  --secondary-600: #7C3AED;
-  --secondary-700: #6D28D9;
-  --secondary-800: #5B21B6;
-  --secondary-900: #4C1D95;
+  /* Secondary - Darker Terracotta for supporting elements */
+  --secondary-50: #FBF3F0;
+  --secondary-100: #F5E4DE;
+  --secondary-200: #ECCDC2;
+  --secondary-300: #DFB09F;
+  --secondary-400: #CC8B74;
+  --secondary-500: #B5664E;
+  --secondary-600: #9A5641;
+  --secondary-700: #804736;
+  --secondary-800: #66382B;
+  --secondary-900: #522D23;
 
   /* ========== ACCENT COLORS (10%) ========== */
-  /* Coral - For CTAs and highlights */
-  --accent-50: #FFF5F5;
-  --accent-100: #FFE3E3;
-  --accent-200: #FFC9C9;
-  --accent-300: #FFA8A8;
-  --accent-400: #FF8787;
-  --accent-500: #FF6B6B;
-  --accent-600: #FA5252;
-  --accent-700: #F03E3E;
-  --accent-800: #E03131;
-  --accent-900: #C92A2A;
+  /* Coral Pink - For CTAs and highlights */
+  --accent-50: #FFF4F2;
+  --accent-100: #FFE8E4;
+  --accent-200: #FFD1C9;
+  --accent-300: #FFB5A8;
+  --accent-400: #FF9384;
+  --accent-500: #FF6F61;
+  --accent-600: #E65A4D;
+  --accent-700: #CC4839;
+  --accent-800: #B33A2D;
+  --accent-900: #992D22;
 
   /* Teal - For success states and badges */
-  --teal-50: #E6FFFA;
-  --teal-100: #B2F5EA;
-  --teal-200: #81E6D9;
-  --teal-300: #4FD1C5;
-  --teal-400: #38B2AC;
-  --teal-500: #00CEC9;
-  --teal-600: #00B5AD;
-  --teal-700: #009688;
-  --teal-800: #00786A;
-  --teal-900: #005A50;
+  --teal-50: #E8F8F5;
+  --teal-100: #C8EDE6;
+  --teal-200: #9FE0D5;
+  --teal-300: #75D1C2;
+  --teal-400: #4EBFAD;
+  --teal-500: #2BAD99;
+  --teal-600: #238F7E;
+  --teal-700: #1B7163;
+  --teal-800: #145349;
+  --teal-900: #0D362F;
 
   /* ========== SEMANTIC COLORS ========== */
   --success-50: #ECFDF5;
@@ -86,25 +86,25 @@
   --error-600: #DC2626;
 
   /* ========== GRADIENTS ========== */
-  --gradient-primary: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-  --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #6C5CE7 100%);
-  --gradient-accent: linear-gradient(135deg, var(--accent-500) 0%, #FF8E53 100%);
+  --gradient-primary: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  --gradient-hero: linear-gradient(135deg, #C1583E 0%, #D98A6F 50%, #FF6F61 100%);
+  --gradient-accent: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-400) 100%);
   --gradient-dark: linear-gradient(135deg, var(--neutral-900) 0%, var(--neutral-800) 100%);
-  --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(250, 251, 252, 1) 100%);
-  --gradient-subtle: linear-gradient(180deg, rgba(108, 92, 231, 0.05) 0%, transparent 100%);
+  --gradient-card: linear-gradient(145deg, #FFFFFF 0%, var(--neutral-50) 100%);
+  --gradient-subtle: linear-gradient(180deg, rgba(193, 88, 62, 0.05) 0%, transparent 100%);
 
-  /* ========== SHADOWS (Premium feel) ========== */
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.15);
-  --shadow-glow: 0 0 40px rgba(108, 92, 231, 0.25);
-  --shadow-glow-sm: 0 0 20px rgba(108, 92, 231, 0.15);
-  --shadow-glow-accent: 0 0 30px rgba(255, 107, 107, 0.3);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(108, 92, 231, 0.08);
+  /* ========== SHADOWS (Warm feel) ========== */
+  --shadow-xs: 0 1px 2px 0 rgb(42 36 32 / 0.03);
+  --shadow-sm: 0 1px 3px 0 rgb(42 36 32 / 0.05), 0 1px 2px -1px rgb(42 36 32 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(42 36 32 / 0.07), 0 2px 4px -2px rgb(42 36 32 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(42 36 32 / 0.08), 0 4px 6px -4px rgb(42 36 32 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(42 36 32 / 0.08), 0 8px 10px -6px rgb(42 36 32 / 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgb(42 36 32 / 0.15);
+  --shadow-glow: 0 0 40px rgba(193, 88, 62, 0.25);
+  --shadow-glow-sm: 0 0 20px rgba(193, 88, 62, 0.15);
+  --shadow-glow-accent: 0 0 30px rgba(255, 111, 97, 0.3);
+  --shadow-card: 0 2px 8px rgba(42, 36, 32, 0.04), 0 4px 16px rgba(42, 36, 32, 0.04);
+  --shadow-card-hover: 0 8px 30px rgba(42, 36, 32, 0.08), 0 4px 16px rgba(193, 88, 62, 0.08);
 
   /* ========== BORDER RADIUS ========== */
   --radius-sm: 0.375rem;

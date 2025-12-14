@@ -348,32 +348,49 @@ export const itemsAPI = {
     create: async (itemData) => {
         const { data: { user } } = await supabase.auth.getUser();
 
-        if (!user) throw new Error('Not authenticated');
+        if (!user) throw new Error('Not authenticated. Please log in to list items.');
 
-        const { data, error } = await supabase
-            .from('items')
-            .insert({
-                user_id: user.id,
-                title: itemData.title,
-                description: itemData.description,
-                category: itemData.category,
-                subcategory: itemData.subcategory,
-                size: itemData.size,
-                color: itemData.color,
-                brand: itemData.brand,
-                item_condition: itemData.condition || itemData.item_condition,
-                daily_price: itemData.dailyPrice || itemData.daily_price,
-                security_deposit: itemData.securityDeposit || itemData.security_deposit || 0,
-                weekly_discount: itemData.weeklyDiscount || itemData.weekly_discount || 0,
-                images: itemData.images || [],
-                status: 'available'
-            })
-            .select()
-            .single();
+        // Ensure user profile exists before creating item (required by RLS)
+        await authAPI.ensureProfile(user);
 
-        if (error) throw error;
+        try {
+            const { data, error } = await supabase
+                .from('items')
+                .insert({
+                    user_id: user.id,
+                    title: itemData.title,
+                    description: itemData.description,
+                    category: itemData.category,
+                    subcategory: itemData.subcategory,
+                    size: itemData.size,
+                    color: itemData.color,
+                    brand: itemData.brand,
+                    item_condition: itemData.condition || itemData.item_condition,
+                    daily_price: itemData.dailyPrice || itemData.daily_price,
+                    security_deposit: itemData.securityDeposit || itemData.security_deposit || 0,
+                    weekly_discount: itemData.weeklyDiscount || itemData.weekly_discount || 0,
+                    images: itemData.images || [],
+                    status: 'available'
+                })
+                .select()
+                .single();
 
-        return { success: true, item: data };
+            if (error) {
+                console.error('Item creation error:', error);
+                if (error.code === '42501') {
+                    throw new Error('Permission denied. Please try logging out and back in.');
+                }
+                if (error.code === '23503') {
+                    throw new Error('Profile not found. Please complete your profile first.');
+                }
+                throw new Error(error.message || 'Failed to create item');
+            }
+
+            return { success: true, item: data };
+        } catch (err) {
+            console.error('Create item error:', err);
+            throw err;
+        }
     },
 
     update: async (id, itemData) => {

@@ -20,4 +20,39 @@ export const isSupabaseConfigured = () => {
         supabaseAnonKey !== 'your-anon-key';
 };
 
+// Upload image to Supabase Storage
+export const uploadItemImage = async (file, userId) => {
+    if (!file) throw new Error('No file provided');
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `items/${fileName}`;
+
+    const { data, error } = await supabase.storage
+        .from('item-images')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (error) {
+        console.error('Upload error:', error);
+        throw new Error('Failed to upload image. Please try again.');
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+        .from('item-images')
+        .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+};
+
+// Upload multiple images
+export const uploadItemImages = async (files, userId) => {
+    const uploadPromises = files.map(file => uploadItemImage(file, userId));
+    return Promise.all(uploadPromises);
+};
+
 export default supabase;

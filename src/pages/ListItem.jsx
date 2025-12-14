@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -6,16 +6,20 @@ import {
     X,
     Plus,
     AlertCircle,
-    CheckCircle
+    CheckCircle,
+    Image as ImageIcon,
+    Loader
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { itemsAPI } from '../api';
 import { categories, sizes, colors } from '../data/mockData';
+import { uploadItemImage } from '../lib/supabase';
 import './ListItem.css';
 
 export default function ListItem() {
     const navigate = useNavigate();
-    const { isAuthenticated, refreshItems } = useApp();
+    const { isAuthenticated, currentUser, refreshItems } = useApp();
+    const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -30,9 +34,10 @@ export default function ListItem() {
         security_deposit: '',
         weekly_discount: ''
     });
-    const [images, setImages] = useState([]);
+    const [uploadedFiles, setUploadedFiles] = useState([]);
     const [imageUrls, setImageUrls] = useState(['']);
     const [loading, setLoading] = useState(false);
+    const [uploadingImages, setUploadingImages] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
@@ -46,6 +51,63 @@ export default function ListItem() {
             [e.target.name]: e.target.value
         }));
         setError('');
+    };
+
+    // Handle file selection
+    const handleFileSelect = (e) => {
+        const files = Array.from(e.target.files);
+        addFiles(files);
+    };
+
+    // Add files to the upload list
+    const addFiles = (files) => {
+        const validFiles = files.filter(file => {
+            if (!file.type.startsWith('image/')) {
+                setError('Please select only image files');
+                return false;
+            }
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                setError('Image must be less than 5MB');
+                return false;
+            }
+            return true;
+        });
+
+        const totalFiles = uploadedFiles.length + validFiles.length;
+        if (totalFiles > 5) {
+            setError('Maximum 5 images allowed');
+            return;
+        }
+
+        // Create preview URLs
+        const filesWithPreviews = validFiles.map(file => ({
+            file,
+            preview: URL.createObjectURL(file)
+        }));
+
+        setUploadedFiles(prev => [...prev, ...filesWithPreviews]);
+        setError('');
+    };
+
+    // Remove uploaded file
+    const removeFile = (index) => {
+        setUploadedFiles(prev => {
+            const newFiles = [...prev];
+            URL.revokeObjectURL(newFiles[index].preview);
+            newFiles.splice(index, 1);
+            return newFiles;
+        });
+    };
+
+    // Handle drag and drop
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files);
+        addFiles(files);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
     };
 
     const handleImageUrlChange = (index, value) => {
@@ -79,14 +141,41 @@ export default function ListItem() {
         }
 
         try {
-            const validImages = imageUrls.filter(url => url.trim() !== '');
+            let allImageUrls = [];
+
+            // Upload files to Supabase Storage
+            if (uploadedFiles.length > 0) {
+                setUploadingImages(true);
+                try {
+                    const userId = currentUser?.id || 'anonymous';
+                    const uploadPromises = uploadedFiles.map(({ file }) =>
+                        uploadItemImage(file, userId)
+                    );
+                    const uploadedUrls = await Promise.all(uploadPromises);
+                    allImageUrls = [...uploadedUrls];
+                } catch (uploadError) {
+                    console.error('Image upload error:', uploadError);
+                    // Continue with URL images if upload fails
+                    setError('Image upload failed, but continuing with URL images if any...');
+                }
+                setUploadingImages(false);
+            }
+
+            // Add manually entered image URLs
+            const validUrlImages = imageUrls.filter(url => url.trim() !== '');
+            allImageUrls = [...allImageUrls, ...validUrlImages];
+
+            // Use default image if no images provided
+            if (allImageUrls.length === 0) {
+                allImageUrls = ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'];
+            }
 
             const itemData = {
                 ...formData,
                 daily_price: parseFloat(formData.daily_price),
                 security_deposit: parseFloat(formData.security_deposit) || 0,
                 weekly_discount: parseInt(formData.weekly_discount) || 0,
-                images: validImages.length > 0 ? validImages : ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400']
+                images: allImageUrls
             };
 
             const result = await itemsAPI.create(itemData);
@@ -99,6 +188,7 @@ export default function ListItem() {
                 }, 2000);
             }
         } catch (err) {
+            console.error('List item error:', err);
             setError(err.message || 'Failed to list item. Please try again.');
         }
 
@@ -285,8 +375,55 @@ export default function ListItem() {
                     {/* Images */}
                     <section className="form-section">
                         <h2>Images</h2>
-                        <p className="form-hint">Add image URLs (up to 5). First image will be the cover.</p>
+                        <p className="form-hint">Upload photos of your item (up to 5). First image will be the cover.</p>
 
+                        {/* File Upload Area */}
+                        <div
+                            className="image-upload-area"
+                            onDrop={handleDrop}
+                            onDragOver={handleDragOver}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileSelect}
+                                accept="image/*"
+                                multiple
+                                style={{ display: 'none' }}
+                            />
+                            <Upload size={40} className="upload-icon" />
+                            <p className="upload-text">
+                                <strong>Click to upload</strong> or drag and drop
+                            </p>
+                            <p className="upload-hint">PNG, JPG up to 5MB (max 5 images)</p>
+                        </div>
+
+                        {/* Image Previews */}
+                        {uploadedFiles.length > 0 && (
+                            <div className="image-previews">
+                                {uploadedFiles.map((file, index) => (
+                                    <div key={index} className="image-preview">
+                                        <img src={file.preview} alt={`Preview ${index + 1}`} />
+                                        <button
+                                            type="button"
+                                            className="remove-preview-btn"
+                                            onClick={() => removeFile(index)}
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                        {index === 0 && <span className="cover-badge">Cover</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* OR Divider */}
+                        <div className="or-divider">
+                            <span>OR add image URLs</span>
+                        </div>
+
+                        {/* Image URLs Section */}
                         <div className="image-urls">
                             {imageUrls.map((url, index) => (
                                 <div key={index} className="image-url-input">
@@ -311,7 +448,7 @@ export default function ListItem() {
                             {imageUrls.length < 5 && (
                                 <button type="button" className="add-image-btn" onClick={addImageUrl}>
                                     <Plus size={16} />
-                                    Add another image
+                                    Add another URL
                                 </button>
                             )}
                         </div>

@@ -130,6 +130,8 @@ export default function ListItem() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Form submitted!');
+        console.log('Form data:', formData);
         setLoading(true);
         setError('');
 
@@ -178,11 +180,15 @@ export default function ListItem() {
                 images: allImageUrls
             };
 
+            console.log('Calling itemsAPI.create with:', itemData);
             const result = await itemsAPI.create(itemData);
+            console.log('API result:', result);
 
             if (result.success) {
                 setSuccess(true);
-                await refreshItems();
+                if (refreshItems) {
+                    await refreshItems();
+                }
                 setTimeout(() => {
                     navigate('/dashboard');
                 }, 2000);

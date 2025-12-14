@@ -32,12 +32,13 @@ export default function Header() {
             <div className="header-container container">
                 {/* Logo */}
                 <Link to="/" className="header-logo">
-                    <span className="logo-icon">👔👗</span>
+                    <img src="/logo.png" alt="ClothShare" className="logo-image" />
                     <span className="logo-text">ClothShare</span>
                 </Link>
 
                 {/* Desktop Navigation */}
                 <nav className="header-nav hide-mobile">
+
                     {navLinks.map(link => (
                         <Link
                             key={link.path}

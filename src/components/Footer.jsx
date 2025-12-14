@@ -12,7 +12,7 @@ export default function Footer() {
                     {/* Brand Section */}
                     <div className="footer-section">
                         <Link to="/" className="footer-logo">
-                            <span className="logo-icon">👔👗</span>
+                            <img src="/logo.png" alt="ClothShare" className="logo-image" />
                             <span className="logo-text">ClothShare</span>
                         </Link>
                         <p className="footer-tagline">

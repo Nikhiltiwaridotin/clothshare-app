@@ -46,16 +46,11 @@
     transform: scale(1.02);
 }
 
-.footer-logo .logo-icon {
-    font-size: 1.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    background: linear-gradient(135deg, var(--primary-100) 0%, var(--accent-100) 100%);
-    border-radius: var(--radius-lg);
-    letter-spacing: -0.3em;
+.footer-logo .logo-image {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+    border-radius: var(--radius-md);
 }
 
 .footer-logo .logo-text {

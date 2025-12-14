@@ -84,10 +84,16 @@ module.exports = async function handler(req, res) {
         });
     } catch (error) {
         console.error('Razorpay order creation failed:', error.message);
+        console.error('Full error:', JSON.stringify(error, null, 2));
+
+        // Razorpay errors have additional details in error.error
+        const errorDetails = error.error || {};
+
         return res.status(500).json({
             error: 'Failed to create order',
-            details: error.message,
+            details: errorDetails.description || error.message,
             code: error.statusCode || error.code,
+            razorpayError: errorDetails,
             receivedAmount: amount,
             amountInPaise: Math.round(amount * 100)
         });

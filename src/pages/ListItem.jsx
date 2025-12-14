@@ -340,7 +340,7 @@ export default function ListItem() {
                                 >
                                     <option value="">Select color</option>
                                     {colors.map(color => (
-                                        <option key={color} value={color}>{color}</option>
+                                        <option key={color.name} value={color.name}>{color.name}</option>
                                     ))}
                                 </select>
                             </div>

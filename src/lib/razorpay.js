@@ -1,10 +1,12 @@
 // Razorpay Payment Integration for ClothShare
 // This utility handles payment processing for clothing rentals
 
-const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxxxxxxxxxxx';
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-// Log the key for debugging (remove in production)
-console.log('Razorpay Key:', RAZORPAY_KEY_ID ? 'Key is set' : 'Key is NOT set');
+// Warn if Razorpay key is not configured
+if (!RAZORPAY_KEY_ID) {
+    console.warn('⚠️ VITE_RAZORPAY_KEY_ID is not set. Payments will not work!');
+}
 
 // Load Razorpay script dynamically
 export const loadRazorpayScript = () => {
@@ -82,6 +84,11 @@ export const initiatePayment = async ({
     if (!scriptLoaded) {
         console.error('Razorpay SDK failed to load');
         throw new Error('Failed to load Razorpay SDK');
+    }
+
+    if (!RAZORPAY_KEY_ID) {
+        console.error('Razorpay Key ID not configured');
+        throw new Error('Payment service not configured. Please set VITE_RAZORPAY_KEY_ID.');
     }
 
     if (!orderId) {

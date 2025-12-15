@@ -18,6 +18,10 @@ import Contact from './pages/Contact';
 import Shipping from './pages/Shipping';
 import Refunds from './pages/Refunds';
 import Cart from './pages/Cart';
+import AboutUs from './pages/AboutUs';
+import Blog from './pages/Blog';
+import VendorRegistration from './pages/VendorRegistration';
+import Lookbook from './pages/Lookbook';
 import './index.css';
 
 function App() {
@@ -34,6 +38,7 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/set-password" element={<SetPassword />} />
               <Route path="/browse" element={<Browse />} />
+              <Route path="/rent-collection" element={<Browse />} />
               <Route path="/item/:id" element={<ItemDetail />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/list-item" element={<ListItem />} />
@@ -45,10 +50,19 @@ function App() {
               <Route path="/shipping" element={<Shipping />} />
               <Route path="/refunds" element={<Refunds />} />
               <Route path="/cart" element={<Cart />} />
-              {/* Placeholder routes */}
+              {/* New Pages */}
+              <Route path="/about-us" element={<AboutUs />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:id" element={<Blog />} />
+              <Route path="/sell-with-us" element={<VendorRegistration />} />
+              <Route path="/vendor-registration" element={<VendorRegistration />} />
+              <Route path="/lookbook" element={<Lookbook />} />
+              {/* User Account routes */}
               <Route path="/saved" element={<Dashboard />} />
+              <Route path="/wishlist" element={<Dashboard />} />
               <Route path="/profile" element={<Dashboard />} />
               <Route path="/profile/:id" element={<Dashboard />} />
+              <Route path="/my-account" element={<Login />} />
             </Routes>
           </main>
           <Footer />

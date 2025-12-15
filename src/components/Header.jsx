@@ -22,9 +22,11 @@ export default function Header() {
     const isActive = (path) => location.pathname === path;
 
     const navLinks = [
-        { path: '/browse', label: 'Browse' },
-        { path: '/how-it-works', label: 'How it Works' },
-        { path: '/faq', label: 'FAQ' }
+        { path: '/about-us', label: 'About Us' },
+        { path: '/rent-collection', label: 'Rent Collection' },
+        { path: '/blog', label: 'Blog' },
+        { path: '/sell-with-us', label: 'Sell With Us' },
+        { path: '/contact', label: 'Contact Us' }
     ];
 
     return (

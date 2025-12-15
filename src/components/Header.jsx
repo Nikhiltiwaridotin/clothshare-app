@@ -134,8 +134,11 @@ export default function Header() {
 
                     {/* Mobile Menu Toggle */}
                     <button
+                        type="button"
                         className="mobile-menu-toggle hide-desktop"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                        aria-expanded={isMobileMenuOpen}
                     >
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
@@ -143,66 +146,64 @@ export default function Header() {
             </div>
 
             {/* Mobile Menu */}
-            {isMobileMenuOpen && (
-                <div className="mobile-menu">
-                    <nav className="mobile-nav">
-                        {navLinks.map(link => (
+            <div className={`mobile-menu ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+                <nav className="mobile-nav">
+                    {navLinks.map(link => (
+                        <Link
+                            key={link.path}
+                            to={link.path}
+                            className={`mobile-nav-link ${isActive(link.path) ? 'active' : ''}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            {link.label}
+                        </Link>
+                    ))}
+                    {isAuthenticated && (
+                        <>
+                            <div className="mobile-nav-divider" />
                             <Link
-                                key={link.path}
-                                to={link.path}
-                                className={`mobile-nav-link ${isActive(link.path) ? 'active' : ''}`}
+                                to="/dashboard"
+                                className="mobile-nav-link"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
-                                {link.label}
-                            </Link>
-                        ))}
-                        {isAuthenticated && (
-                            <>
-                                <div className="mobile-nav-divider" />
-                                <Link
-                                    to="/dashboard"
-                                    className="mobile-nav-link"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    Dashboard
-                                </Link>
-                                <Link
-                                    to="/list-item"
-                                    className="mobile-nav-link"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    List an Item
-                                </Link>
-                                <Link
-                                    to="/saved"
-                                    className="mobile-nav-link"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    Saved Items
-                                </Link>
-                            </>
-                        )}
-                    </nav>
-                    {!isAuthenticated && (
-                        <div className="mobile-menu-actions">
-                            <Link
-                                to="/login"
-                                className="btn btn-secondary w-full"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                Log in
+                                Dashboard
                             </Link>
                             <Link
-                                to="/signup"
-                                className="btn btn-primary w-full"
+                                to="/list-item"
+                                className="mobile-nav-link"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
-                                Sign up
+                                List an Item
                             </Link>
-                        </div>
+                            <Link
+                                to="/saved"
+                                className="mobile-nav-link"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Saved Items
+                            </Link>
+                        </>
                     )}
-                </div>
-            )}
+                </nav>
+                {!isAuthenticated && (
+                    <div className="mobile-menu-actions">
+                        <Link
+                            to="/login"
+                            className="btn btn-secondary w-full"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Log in
+                        </Link>
+                        <Link
+                            to="/signup"
+                            className="btn btn-primary w-full"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Sign up
+                        </Link>
+                    </div>
+                )}
+            </div>
         </header>
     );
 }

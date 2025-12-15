@@ -3,7 +3,7 @@
 .header {
     position: sticky;
     top: 0;
-    z-index: var(--z-sticky);
+    z-index: 1000;
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -263,6 +263,10 @@
     color: var(--neutral-700);
     border-radius: var(--radius-lg);
     transition: all var(--transition-fast);
+    z-index: 10;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .mobile-menu-toggle:hover {
@@ -274,66 +278,80 @@
 /* Mobile Menu */
 .mobile-menu {
     position: fixed;
-    top: 4.5rem;
+    top: 72px;
+    /* 4.5rem = 72px */
     left: 0;
     right: 0;
     bottom: 0;
     background: white;
-    padding: var(--space-6);
-    z-index: var(--z-fixed);
-    animation: slideDown var(--transition-base) ease-out;
+    padding: 24px;
+    z-index: 9999;
     overflow-y: auto;
+    /* Hidden by default */
+    transform: translateX(100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
+}
+
+/* Show mobile menu when open */
+.mobile-menu.mobile-menu-open {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
 }
 
 .mobile-nav {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: 8px;
 }
 
 .mobile-nav-link {
     display: flex;
     align-items: center;
-    padding: var(--space-4) var(--space-5);
-    font-size: var(--text-lg);
-    font-weight: var(--font-medium);
-    color: var(--neutral-700);
+    padding: 16px 20px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #3D3630;
     text-decoration: none;
-    border-radius: var(--radius-xl);
-    transition: all var(--transition-fast);
+    border-radius: 12px;
+    transition: all 0.15s ease;
     border: 1px solid transparent;
+    min-height: 56px;
 }
 
 .mobile-nav-link:hover,
 .mobile-nav-link.active {
-    background: var(--primary-50);
-    border-color: var(--primary-200);
-    color: var(--primary-600);
+    background: #FDF5F2;
+    border-color: #F4D0C4;
+    color: #A84A33;
 }
 
 .mobile-nav-divider {
     height: 1px;
-    background: var(--neutral-100);
-    margin: var(--space-4) 0;
+    background: #EDE4CC;
+    margin: 16px 0;
 }
 
 .mobile-menu-actions {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
-    margin-top: var(--space-8);
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--neutral-100);
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #EDE4CC;
 }
 
 .mobile-menu-actions .btn {
     justify-content: center;
-    padding: var(--space-4);
-    font-size: var(--text-base);
+    padding: 16px;
+    font-size: 16px;
+    min-height: 52px;
 }
 
 .mobile-menu-actions .btn-primary {
-    background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-400) 100%);
+    background: linear-gradient(135deg, #FF6F61 0%, #FF9384 100%);
     box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
 }
 
@@ -347,6 +365,22 @@
 @media (max-width: 1023px) {
     .hide-mobile {
         display: none !important;
+    }
+
+    /* Ensure mobile menu toggle is visible on mobile */
+    .mobile-menu-toggle {
+        display: flex !important;
+    }
+
+    /* Ensure header actions have proper spacing on mobile */
+    .header-actions {
+        gap: var(--space-2);
+    }
+
+    /* Make sure Sign up button doesn't overlap */
+    .header-actions .btn-primary {
+        padding: var(--space-2) var(--space-4);
+        font-size: var(--text-sm);
     }
 }
 
